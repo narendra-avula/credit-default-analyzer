@@ -3,6 +3,9 @@ __pycache__/
 *.pyc
 *.pkl
 *.joblib
+*.iml
 .DS_Store
 .idea
-tests/
+bin
+lib
+include
