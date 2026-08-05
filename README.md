@@ -89,87 +89,85 @@ Each model was trained and evaluated using exactly the same train/test split.
 | Random Forest | 0.7687 | 0.7923 | 0.7687 | 0.7778 | **0.3922** | **0.7874** |
 
 ---
-
 # 📝 Model Analysis
 
 ## Logistic Regression
 
 - Strong baseline model.
-- Performs consistently across all evaluation metrics.
-- Good AUC score (0.7435).
-- Easy to interpret.
+- Accuracy: **69.22%**
+- AUC: **0.7435**
+- Easy to interpret and provides consistent performance.
 
 ---
 
 ## Decision Tree
 
-- Higher accuracy than Logistic Regression.
+- Accuracy improved to **71.20%**.
+- Simple and interpretable model.
 - Controlled tree depth reduces overfitting.
-- Lower AUC compared to Random Forest.
+- AUC: **0.7427**.
 
 ---
 
 ## K-Nearest Neighbors (KNN)
 
-- Highest overall accuracy (81.23%).
-- Highest precision.
-- Performs well because the dataset was properly scaled.
-- Conservative in predicting defaults, which may reduce recall in some cases.
+- Highest Accuracy (**81.23%**).
+- Highest Precision (**79.29%**).
+- Highest Recall (**81.23%**).
+- Highest F1 Score (**79.23%**).
+- Performs well after feature scaling.
+- Selected as the best-performing model based on accuracy.
 
 ---
 
 ## Gaussian Naive Bayes
 
 - Fastest model.
-- Lowest overall accuracy.
-- Assumption of Gaussian feature distribution does not perfectly fit the dataset.
-- Moderate AUC despite lower accuracy.
+- Lowest accuracy (**64.18%**).
+- Gaussian assumption does not perfectly fit the dataset.
+- Moderate ROC-AUC (**0.7555**).
 
 ---
 
 ## Random Forest
 
-- Highest AUC (0.7874).
-- Highest Matthews Correlation Coefficient.
-- Strong balance between precision and recall.
-- Ensemble learning improves robustness.
-- Less sensitive to noise and overfitting.
+- Highest ROC-AUC (**0.7874**).
+- Highest MCC (**0.3922**).
+- Excellent balance between precision and recall.
+- Robust ensemble model with strong generalization performance.
 
 ---
 
-# 🏆 Best Performing Model
+# 🏆 Best Performing Models
 
-### Highest Accuracy
+## Highest Accuracy
 
-**K-Nearest Neighbors**
+🥇 **K-Nearest Neighbors (KNN)**
 
-Accuracy:
-**81.23%**
-
----
-
-### Highest AUC
-
-**Random Forest**
-
-AUC:
-**0.7874**
+Accuracy: **81.23%**
 
 ---
 
-### Overall Winner
+## Highest ROC-AUC
 
-## 🥇 Random Forest
+🥇 **Random Forest**
 
-Although KNN achieved the highest accuracy, Random Forest provides the best balance between all evaluation metrics, especially:
+ROC-AUC: **0.7874**
 
-- Highest AUC
-- Highest MCC
-- Better robustness
-- Better generalization
-- Better handling of imbalanced data
+---
 
-Therefore, Random Forest is selected as the final model for credit default prediction.
+## Overall Winner
+
+Since **accuracy is considered the primary evaluation metric for this project**, **K-Nearest Neighbors (KNN)** is selected as the overall best-performing model.
+
+KNN achieved:
+
+- ✅ Highest Accuracy (81.23%)
+- ✅ Highest Precision (79.29%)
+- ✅ Highest Recall (81.23%)
+- ✅ Highest F1 Score (79.23%)
+
+Although **Random Forest** achieved the highest ROC-AUC (0.7874) and Matthews Correlation Coefficient (0.3922), KNN demonstrated the best predictive accuracy on the test dataset. Therefore, KNN is selected as the final model for this implementation.
 
 ---
 
