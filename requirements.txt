@@ -1,5 +1,5 @@
 streamlit==1.60.0
-starlette==0.40.0
+starlette==0.41.0
 scikit-learn==1.9.0
 numpy==2.5.1
 pandas==3.0.5
