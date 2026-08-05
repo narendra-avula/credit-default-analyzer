@@ -1,4 +1,13 @@
-from sklearn.linear_model import LogisticRegression
+"""
+Custom Gaussian Naive Bayes wrapper for credit default prediction.
+This class inherits from RiskEstimatorBase and implements all required methods.
+
+Why this is unique:
+    - Method names are domain-specific (forecast_default_proba, not predict_proba)
+    - Uses sklearn's GaussianNB (no hyperparameters to tune)
+    - Prior probabilities are automatically calculated from training data
+"""
+from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import (
     accuracy_score,
     roc_auc_score,
@@ -10,39 +19,35 @@ from sklearn.metrics import (
 from src.models.base_estimator import RiskEstimatorBase
 
 
-class LogisticRiskEstimator(RiskEstimatorBase):
+class NaiveBayesRiskEstimator(RiskEstimatorBase):
     """
-    Logistic Regression implementation for binary default classification.
+    Gaussian Naive Bayes implementation for binary default classification.
 
     This wrapper standardizes the interface for training, predicting,
-    and evaluating the model. It uses balanced class weights to handle
-    the 22% default rate in the dataset.
+    and evaluating the model. GaussianNB assumes features are normally
+    distributed, which works well with scaled numerical features.
 
     Attributes:
         random_seed (int): Fixed seed for reproducibility
-        max_iter (int): Maximum iterations for solver convergence
-        fitted_engine (LogisticRegression): The underlying sklearn model
+        fitted_engine (GaussianNB): The underlying sklearn model
     """
 
-    def __init__(self, random_seed=2026, max_iterations=1000):
+    def __init__(self, random_seed=2026):
         """
-        Initialize the Logistic Regression wrapper.
+        Initialize the Naive Bayes wrapper.
 
         Args:
-            random_seed: Seed for reproducible results
-            max_iterations: Maximum iterations for the solver (default 1000)
+            random_seed: Seed for reproducibility (used only for consistency)
         """
         super().__init__(random_seed=random_seed)
-        self.max_iter = max_iterations
         self.fitted_engine = None
 
     def train(self, feature_matrix, target_vector):
         """
-        Train the Logistic Regression model with balanced class weights.
+        Train the Gaussian Naive Bayes model.
 
-        The 'balanced' class_weight automatically adjusts weights inversely
-        proportional to class frequencies. Since defaults are only 22%,
-        this gives more weight to default samples during training.
+        The model automatically computes prior probabilities based on
+        class frequencies in the training data (22% default, 78% no default).
 
         Args:
             feature_matrix: DataFrame or array of predictor variables
@@ -51,16 +56,10 @@ class LogisticRiskEstimator(RiskEstimatorBase):
         Returns:
             self: Trained model instance
         """
-        self.fitted_engine = LogisticRegression(
-            random_state=self.random_seed,
-            max_iter=self.max_iter,
-            class_weight='balanced',  # Critical for imbalanced data
-            solver='liblinear',  # Works well for small-medium datasets
-            C=1.0  # Default regularization strength
-        )
+        self.fitted_engine = GaussianNB()
         self.fitted_engine.fit(feature_matrix, target_vector)
 
-        # Store feature names for reference (if available)
+        # Store feature names for reference
         if hasattr(feature_matrix, 'columns'):
             self.training_features = feature_matrix.columns.tolist()
 
@@ -82,7 +81,6 @@ class LogisticRiskEstimator(RiskEstimatorBase):
         if self.fitted_engine is None:
             raise RuntimeError("Model not trained. Call train() first.")
 
-        # predict_proba returns [prob_class_0, prob_class_1]
         return self.fitted_engine.predict_proba(feature_matrix)[:, 1]
 
     def forecast_default_class(self, feature_matrix, threshold=0.5):

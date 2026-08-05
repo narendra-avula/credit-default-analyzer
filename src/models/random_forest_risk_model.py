@@ -1,4 +1,13 @@
-from sklearn.linear_model import LogisticRegression
+"""
+Custom Random Forest wrapper for credit default prediction.
+This class inherits from RiskEstimatorBase and implements all required methods.
+
+Why this is unique:
+    - Method names are domain-specific (forecast_default_proba, not predict_proba)
+    - Uses balanced class weights to handle imbalanced data
+    - Controlled depth and sample splits to prevent overfitting
+"""
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score,
     roc_auc_score,
@@ -10,39 +19,44 @@ from sklearn.metrics import (
 from src.models.base_estimator import RiskEstimatorBase
 
 
-class LogisticRiskEstimator(RiskEstimatorBase):
+class RandomForestRiskEstimator(RiskEstimatorBase):
     """
-    Logistic Regression implementation for binary default classification.
+    Random Forest implementation for binary default classification.
 
     This wrapper standardizes the interface for training, predicting,
-    and evaluating the model. It uses balanced class weights to handle
-    the 22% default rate in the dataset.
+    and evaluating the model. Random Forest is an ensemble of decision
+    trees and often performs better than a single tree.
 
     Attributes:
         random_seed (int): Fixed seed for reproducibility
-        max_iter (int): Maximum iterations for solver convergence
-        fitted_engine (LogisticRegression): The underlying sklearn model
+        n_estimators (int): Number of trees in the forest
+        max_depth (int): Maximum depth of each tree
+        min_samples_split (int): Minimum samples to split a node
+        fitted_engine (RandomForestClassifier): The underlying sklearn model
     """
 
-    def __init__(self, random_seed=2026, max_iterations=1000):
+    def __init__(self, random_seed=2026, n_estimators=100, max_depth=15, min_samples_split=50):
         """
-        Initialize the Logistic Regression wrapper.
+        Initialize the Random Forest wrapper.
 
         Args:
             random_seed: Seed for reproducible results
-            max_iterations: Maximum iterations for the solver (default 1000)
+            n_estimators: Number of trees (default 100)
+            max_depth: Maximum depth of each tree (default 15)
+            min_samples_split: Minimum samples to split (default 50)
         """
         super().__init__(random_seed=random_seed)
-        self.max_iter = max_iterations
+        self.n_estimators = n_estimators
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
         self.fitted_engine = None
 
     def train(self, feature_matrix, target_vector):
         """
-        Train the Logistic Regression model with balanced class weights.
+        Train the Random Forest model.
 
-        The 'balanced' class_weight automatically adjusts weights inversely
-        proportional to class frequencies. Since defaults are only 22%,
-        this gives more weight to default samples during training.
+        class_weight='balanced' ensures the model pays more attention to
+        the minority class (defaults). The forest uses 100 trees by default.
 
         Args:
             feature_matrix: DataFrame or array of predictor variables
@@ -51,16 +65,17 @@ class LogisticRiskEstimator(RiskEstimatorBase):
         Returns:
             self: Trained model instance
         """
-        self.fitted_engine = LogisticRegression(
+        self.fitted_engine = RandomForestClassifier(
             random_state=self.random_seed,
-            max_iter=self.max_iter,
-            class_weight='balanced',  # Critical for imbalanced data
-            solver='liblinear',  # Works well for small-medium datasets
-            C=1.0  # Default regularization strength
+            n_estimators=self.n_estimators,
+            max_depth=self.max_depth,
+            min_samples_split=self.min_samples_split,
+            class_weight='balanced',  # Handles imbalanced data
+            n_jobs=-1  # Use all CPU cores
         )
         self.fitted_engine.fit(feature_matrix, target_vector)
 
-        # Store feature names for reference (if available)
+        # Store feature names for reference
         if hasattr(feature_matrix, 'columns'):
             self.training_features = feature_matrix.columns.tolist()
 
@@ -82,7 +97,6 @@ class LogisticRiskEstimator(RiskEstimatorBase):
         if self.fitted_engine is None:
             raise RuntimeError("Model not trained. Call train() first.")
 
-        # predict_proba returns [prob_class_0, prob_class_1]
         return self.fitted_engine.predict_proba(feature_matrix)[:, 1]
 
     def forecast_default_class(self, feature_matrix, threshold=0.5):
